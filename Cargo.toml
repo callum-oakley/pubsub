@@ -1,0 +1,8 @@
+[package]
+name = "pubsub"
+version = "0.1.0"
+authors = ["Callum Oakley <c.oakley108@gmail.com>"]
+
+[dependencies]
+hyper = "0.12"
+futures = "0.1"
