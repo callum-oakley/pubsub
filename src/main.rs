@@ -2,7 +2,7 @@ extern crate futures;
 extern crate hyper;
 
 use futures::sync::mpsc::{channel, Receiver, Sender};
-use futures::{future, Stream};
+use futures::{future, Sink, Stream};
 use hyper::rt::{self, Future};
 use hyper::service::service_fn;
 use hyper::{Body, Method, Request, Response, Server, StatusCode};
@@ -28,9 +28,16 @@ impl Bus {
         r
     }
 
-    fn send(&self, message: String) {
-        if let Some(mut s) = self.sender.lock().unwrap().clone() {
-            s.try_send(message).unwrap();
+    fn send(&self, message: String) -> Box<Future<Item = (), Error = ()>> {
+        if let Some(s) = self.sender.lock().unwrap().clone() {
+            Box::new(
+                s.send(message)
+                    .and_then(|s| s.flush())
+                    .map(|_| ())
+                    .map_err(|_| ()),
+            )
+        } else {
+            Box::new(future::ok(()))
         }
     }
 }
